@@ -5,9 +5,11 @@
 
 int n, k;
 int id[300009], a[300009];
+__int64 sums[300009];
 
 void ReadData()
 {
+  memset(sums, 0, sizeof(sums));
   scanf("%d", &n);
   for(int i = 0; i < n; i++)
   {
@@ -24,21 +26,30 @@ int compare(const void *v1, const void *v2)
 
 int answer;
 
+__int64 getSum(int l, int r)
+{
+  return sums[r + 1] - sums[l];
+}
+
 void Solve()
 {
   qsort(id, n, sizeof(int), compare);
+  for(int i = 0; i < n; i++)
+  {
+    sums[i + 1] = sums[i] + a[id[i]];
+  }
   answer = 0;
-  int sum = 0;
+  __int64 sum = 0;
   for(int i = 1; i < k; i++)
   {
-    sum += std::abs(a[id[i]] - a[id[i - 1]]);
+    sum += i * a[id[i]] - getSum(0, i - 1);
   }
-  int sumBest = sum;
+  __int64 sumBest = sum;
   int cnt = n - k + 1;
   for(int i = 1; i < cnt; i++)
   {
-    sum -= std::abs(a[id[i]] - a[id[i - 1]]);
-    sum += std::abs(a[id[i + k - 2]] - a[id[k + i - 1]]);
+    sum -= getSum(i, i + k - 2) - a[id[i - 1]] * 1LL * (k - 1);
+    sum += a[id[i + k - 1]] * 1LL * (k - 1) - getSum(i, i + k - 2);
     if(sum < sumBest)
     {
       sumBest = sum;
@@ -49,7 +60,7 @@ void Solve()
   {
     printf("%d ", a[id[i]]);
   }*/
-  printf("%d\n", sumBest);
+  //printf("%d\n", sumBest);
 }
 
 void WriteData()
