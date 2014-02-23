@@ -13,7 +13,7 @@ struct point2d
 
 int n;
 point2d king;
-int whiteCnt, blackCnt, maxSteps;
+int whiteCnt, blackCnt, blackCntToKill, maxSteps;
 int field[29][29];
 
 void ReadData()
@@ -30,10 +30,15 @@ void ReadData()
     field[p.y][p.x] = WHITE;
   }
   scanf("%d", &blackCnt);
+  blackCntToKill = blackCnt;
   for(int i = 0; i < blackCnt; i++)
   {
     scanf("%d %d", &p.x, &p.y);
     field[p.y][p.x] = BLACK;
+    if(p.x == 1 || p.x == n || p.y == 1 || p.y == n)
+    {
+      blackCntToKill--;
+    }
   }
 }
 
@@ -49,24 +54,28 @@ int bad[5] = {1, 0, 3, 2, 100500};
 
 int answer;
 
-bool check(int xVal, int yVal)
+inline bool check(int xVal, int yVal)
 {
   return (xVal > 1) && (yVal > 1) && (xVal < n) && (yVal < n);
 }
 
-bool checkInside(int xVal, int yVal)
+inline bool checkInside(int xVal, int yVal)
 {
   return (xVal >= 1) && (yVal >= 1) && (xVal <= n) && (yVal <= n);
 }
 
-int f(int direction, int deep)
+void f(int direction, int killed)
 {
-  if(deep >= blackCnt)
+  if(killed > answer)
   {
-    return 0;
+    answer = killed;
+    //printf("%d\n", answer);
   }
-  //printf("king: %d %d\n", king.x, king.y);
-  int result = 0;
+  if(answer >= blackCntToKill)
+  {
+    return;
+  }
+  //int result = 0;
   point2d copy = king;
   for(int i = 0; i < 4; i++)
   {
@@ -77,53 +86,38 @@ int f(int direction, int deep)
     for(int j = 1; j < maxSteps; j++)
     {
       point2d nextP = {king.x + moves[i][1] * j, king.y + moves[i][0] * j};
-      if(!check(nextP.x, nextP.y))//Если можем рубить в эту точку
+      if(!check(nextP.x, nextP.y) || field[nextP.y][nextP.x] == WHITE)
       {
         break;
       }
-      if(field[nextP.y][nextP.x] != 0)//Если в этой точке есть что рубить
+      if(field[nextP.y][nextP.x] == BLACK)
       {
-        if(field[nextP.y][nextP.x] == -BLACK)//Если шашка уже срублена
+        point2d afterBlack = nextP;
+        for(int k = 1; k < maxSteps; k++)
         {
-          continue;
-        }
-        if(field[nextP.y][nextP.x] == BLACK)//Если это не белая шашка
-        {
-          for(int k = 1; k < maxSteps; k++)//Проверим куда сможем приземлиться после срубки
+          afterBlack.y += moves[i][0];
+          afterBlack.x += moves[i][1];
+          if(!checkInside(afterBlack.y, afterBlack.x) || field[afterBlack.y][afterBlack.x] != 0)
           {
-            if(!checkInside(nextP.y + moves[i][0] * k, nextP.x + moves[i][1] * k)
-              || field[nextP.y + moves[i][0] * k][nextP.x + moves[i][1] * k] != 0)
-            {
-              break;
-            }
-            field[nextP.y][nextP.x] = -BLACK;
-            king.x = nextP.x + moves[i][1] * k;
-            king.y = nextP.y + moves[i][0] * k;
-            /*for(int deb = 0; deb < deep; deb++)
-            {
-              printf(" ");
-            }
-            printf("killed: %d %d. king: %d %d\n", nextP.x, nextP.y, king.x, king.y);*/
-            result = std::max(result, 1 + f(i, deep + 1));
-            answer = std::max(answer, result);
-            if(answer == blackCnt)
-            {
-              return result;
-            }
-            field[nextP.y][nextP.x] = BLACK;
-            king = copy;
+            break;
           }
+          field[nextP.y][nextP.x] = 0;
+          king = afterBlack;
+          f(i, 1 + killed);
+          //result = std::max(result, 1 + f(i, 1 + killed));
+          field[nextP.y][nextP.x] = BLACK;
+          king = copy;
         }
         break;
       }
     }
   }
-  return result;
+  //return result;
 }
 
 void Solve()
 {
-  answer = f(4, 0);
+  f(4, 0);
 }
 
 void WriteData()
@@ -186,12 +180,12 @@ int main()
     return 0;
   }
   int QWE;
-  #ifndef ONLINE_JUDGE
+#ifndef ONLINE_JUDGE
   freopen("input.txt", "r", stdin);
   scanf("%d", &QWE);
-  #else
+#else
   QWE = 1;
-  #endif
+#endif
   for(int T = 0; T < QWE; T++)
   {
     ReadData();
