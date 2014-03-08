@@ -9,6 +9,8 @@
 
 using namespace std;
 
+#pragma comment(linker, "/STACK:66777216")
+
 int n, k;
 int c[100009];
 vector<int> tree[4 * 100009];
@@ -34,6 +36,46 @@ void ReadData()
 }
 
 vector<int>::iterator it1, it2;
+
+void build(int l, int r, int index)
+{
+  if(l == r)
+  {
+    tree[index].push_back(c[r]);
+    return;
+  }
+  int center = l + (r - l) / 2;
+  build(l, center, index * 2 + 1);
+  build(center + 1, r, index * 2 + 2);
+  it1 = tree[index * 2 + 1].begin();
+  it2 = tree[index * 2 + 2].begin();
+  while(it1 != tree[index * 2 + 1].end() || it2 != tree[index * 2 + 2].end())
+  {
+    if(it1 != tree[index * 2 + 1].end() && it2 != tree[index * 2 + 2].end())
+    {
+      if(*it1 < *it2)
+      {
+        tree[index].push_back(*it1);
+        it1++;
+      }
+      else
+      {
+        tree[index].push_back(*it2);
+        it2++;
+      }
+    }
+    else if(it1 != tree[index * 2 + 1].end())
+    {
+      tree[index].push_back(*it1);
+      it1++;
+    }
+    else
+    {
+      tree[index].push_back(*it2);
+      it2++;
+    }
+  }
+}
 
 void addElem(int l, int r, int pos, int index, int value)
 {
@@ -116,34 +158,9 @@ int f(int level)
   if(numbersPos.find(t) != numbersPos.end())
   {
     it1 = upper_bound(numbersPos[t].begin(), numbersPos[t].end(), min(level + k, n - 1));
-    //if(*it1 != min(level + k, n - 1))
-    //{
-      it1--;
-    //}
+    it1--;
     ind = *it1;
   }
-  /*int ind = -1;
-  for(int i = 0; i < k; i++)
-  {
-    if(c[i + level + 1] == t)
-    {
-      ind = i + level + 1;
-    }
-  }*/
-  /*int t = INT_MAX;
-  int ind = -1;
-  for(int i = 0; i < k; i++)
-  {
-    if(i + level + 1 < n && c[i + level + 1] > c[level] && c[i + level + 1] < t)
-    {
-      t = c[i + level + 1];
-      ind = i + level + 1;
-    }
-    else if(i + level + 1 < n && c[i + level + 1] == t)
-    {
-      ind = i + level + 1;
-    }
-  }*/
   if(ind != -1)
   {
     result = max(result, f(ind));
@@ -156,10 +173,7 @@ int answer;
 
 void Solve()
 {
-  for(int i = 0; i < n; i++)
-  {
-    addElem(0, n - 1, i, 0, c[i]);
-  }
+  build(0, n - 1, 0);
   answer = -1;
   memset(dp, 0xFF, sizeof(dp));
   for(int i = 0; i < k; i++)
@@ -182,11 +196,11 @@ int main()
 #endif
   for(int T = 0; T < QWE; T++)
   {
-    time_t timeTotal = clock();
+    //time_t timeTotal = clock();
     ReadData();
     Solve();
     WriteData();
-    printf("working time: %f\n", (float)timeTotal / CLOCKS_PER_SEC);
+    //printf("working time: %f\n", (float)timeTotal / CLOCKS_PER_SEC);
   }
   return 0;
 }
