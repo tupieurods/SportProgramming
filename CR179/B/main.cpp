@@ -1,125 +1,102 @@
-#include <iostream>
-#include <string>
-#include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <algorithm>
 
-using namespace std;
+#define MOD 1000000007
 
-const int mod = 1000000007;
+int n;
+char str[2][100009];
+
+void ReadData()
+{
+  scanf("%d%*c", &n);
+  scanf("%s%*c", str[0]);
+  scanf("%s%*c", str[1]);
+}
+
+__int64 binPow(int value, int power)
+{
+  if(power == 0)
+  {
+    return 1LL;
+  }
+  __int64 result = binPow(value, power / 2);
+  result = (result * result) % MOD;
+  return ((power % 2) == 1) ? (result * value) % MOD : result;
+}
+
+__int64 answer;
+
+void Solve()
+{
+  int power = 0;
+  __int64 lower_equal = 1;
+  __int64 higher_equal = 1;
+  __int64 equal = 1;
+  for(int i = 0; i < n; i++)
+  {
+    if(str[0][i] == '?' && str[1][i] == '?')
+    {
+      power += 2;
+      lower_equal = (lower_equal * 55) % MOD;
+      higher_equal = (higher_equal * 55) % MOD;
+      equal = (equal * 10) % MOD;
+    }
+    else if(str[0][i] != '?' && str[1][i] != '?')
+    {
+      if(str[0][i] < str[1][i])
+      {
+        equal = 0;
+        higher_equal = 0;
+      }
+      else if(str[0][i] > str[1][i])
+      {
+        lower_equal = 0;
+        equal = 0;
+      }
+    }
+    else
+    {
+      power++;
+      if(str[0][i] == '?')
+      {
+        lower_equal = (lower_equal * ((int)(str[1][i] - '0') + 1)) % MOD;
+        higher_equal = (higher_equal * (10 - (int)(str[1][i] - '0'))) % MOD;
+      }
+      else
+      {
+        lower_equal = (lower_equal * (10 - (int)(str[0][i] - '0'))) % MOD;
+        higher_equal = (higher_equal * ((int)(str[0][i] - '0') + 1)) % MOD;
+      }
+    }
+  }
+  answer = (binPow(10, power) - lower_equal - higher_equal + equal) % MOD;
+  if(answer < 0)
+  {
+    answer += MOD;
+  }
+}
+
+void WriteData()
+{
+  printf("%I64d\n", answer);
+}
 
 int main()
 {
   int QWE;
-#ifndef ONLINE_JUDGE
+  #ifndef ONLINE_JUDGE
   freopen("input.txt", "r", stdin);
   scanf("%d", &QWE);
-#else
+  #else
   QWE = 1;
-#endif
-  string s1, s2;
-  int n;
-  cin >> n;
-  cin >> s1;
-  cin >> s2;
-  int *last1 = new int[n], *last2 = new int[n];
-  memset(last1, 0, sizeof(int) * n);
-  memset(last2, 0, sizeof(int) * n);
-  int sum1 = 0, sum2 = 0;
-  for(int i = n - 1; i >= 0; i--)
+  #endif
+  for(int T = 0; T < QWE; T++)
   {
-    last1[i] = sum1;
-    if(s1[i] == '?')
-      sum1++;
-    last2[i] = sum2;
-    if(s2[i] == '?')
-      sum2++;
+    ReadData();
+    Solve();
+    WriteData();
   }
-  __int64 answer = 0;
-  int flag = 3;
-  //0 - <
-  //1 - >
-  //2 - uncomparable
-  //3 - undefined
-  for(int i = 0; i < n; i++)
-  {
-    if(s1[i] == '?' || s2[i] == '?')
-    {
-      __int64 minimal;
-      if(s1[i] == '?' && s2[i] == '?')
-      {
-        minimal = 55;//Если два вопроса, то больше 55и вариантов только
-        //в случае 3, он отдельно обрабатывается
-      }
-      else 
-      {
-        //Рассчитать сколько возможных вариантов если не два ?
-      }
-      if(answer == 0)//не будем на ноль множить
-        answer = 1;
-      switch(flag)
-      {
-        case 0:
-        case 1:
-        {
-          int cnt = last1[i] + last2[i];
-          for(int j = 0; j < cnt; j++)
-          {
-            minimal *= 10;
-            minimal %= mod;
-          }
-          answer *= minimal;
-          answer %= mod;
-          break;
-        }
-        case 2:
-        {
-          minimal = 1;
-          int cnt = last1[i] + last2[i];
-          if(s1[i] == '?')
-            cnt++;
-          if(s2[i] == '?')
-            cnt++;
-          for(int j = 0; j < cnt; j++)
-          {
-            minimal *= 10;
-            minimal %= mod;
-          }
-          answer *= minimal;
-          answer %= mod;
-          break;
-        }
-        case 3:
-        {
-          minimal = 362880;
-          int cnt = last1[i] + last2[i];
-          for(int j = 0; j < cnt; j++)
-          {
-            minimal *= 10;
-            minimal %= mod;
-          }
-          answer *= minimal;
-          answer %= mod;
-          answer *= 2;
-          answer %= mod;
-          break;
-        }
-      }
-      continue;
-    }
-    if(flag == 3)
-    {
-      flag = s1[i] - '0' < s2[i] - '0' ? 0 : 1;
-      continue;
-    }
-    else if(flag != 2)
-    {
-      int current = s1[i] - '0' < s2[i] - '0' ? 0 : 1;
-      if(current != flag)
-        flag = 2;
-    }
-  }
-  if(answer == 0 && flag == 2)
-    answer++;
-  cout << answer << endl;
   return 0;
 }

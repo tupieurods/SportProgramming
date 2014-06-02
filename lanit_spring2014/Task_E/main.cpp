@@ -57,9 +57,9 @@ void realUpdate()
       {
         a[i] = !a[i];
       }
+      b[i][j] = false;
     }
   }
-  memset(b, 0, sizeof(b));
 }
 
 void Solve()
@@ -105,6 +105,7 @@ int main()
   int QWE = 1;
 #ifndef ONLINE_JUDGE
   freopen("input.txt", "r", stdin);
+  //freopen("output.txt", "w", stdout);
   scanf("%d", &QWE);
 #endif
   for(int T = 0; T < QWE; T++)

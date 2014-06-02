@@ -116,13 +116,13 @@ void WriteData()
   printf("%d\n", answer);
 }
 
-//#define LOCAL
+#define LOCAL
 
 int main()
 {
 #ifdef LOCAL
   freopen("input.txt", "r", stdin);
-  freopen("output.txt", "w", stdout);
+  //freopen("output.txt", "w", stdout);
 #endif
   ReadData();
   Solve();
