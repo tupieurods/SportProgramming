@@ -59,13 +59,13 @@ void dfs(node *currentNode, int deep, int code)
   }
   if(currentNode->r != NULL)
   {
-    dfs(currentNode->r, deep + 1, code | (1 << (32 - deep)));
+    dfs(currentNode->r, deep + 1, code | (1 << (31 - deep)));
   }
 }
 
-int getBit(int val, int pos)
+bool isOn(int val, int pos)
 {
-  return (val & (1 << pos)) >> pos;
+  return (val & (1 << pos)) != 0;
 }
 
 void setBit(unsigned char &wByte, int pos)
@@ -73,19 +73,21 @@ void setBit(unsigned char &wByte, int pos)
   wByte |= (unsigned char)(1) << pos;
 }
 
-void encode()
+void clearCodes(node *currentNode)
 {
-  freopen(fileName, "rb", stdin);
-  freopen("out.txt", "wb", stdout);
-  memset(symb, 0, sizeof(symb));
-  char c;
-  int cnt = 0;
-  while(scanf("%c", &c) != EOF)
+  if(currentNode->l != NULL)
   {
-    unsigned char current = (unsigned char)c;
-    symb[current]++;
-    cnt++;
+    clearCodes(currentNode->l);
   }
+  if(currentNode->r != NULL)
+  {
+    clearCodes(currentNode->r);
+  }
+  delete currentNode;
+}
+
+node* getTree()
+{
   priority_queue<node*, vector<node*>, MyComparator> pq;
   for(int i = 0; i < 256; i++)
   {
@@ -120,13 +122,32 @@ void encode()
   memset(codes, 0, sizeof(codes));
   node *mainNode = pq.top();
   pq.pop();
+  return mainNode;
+}
+
+void encode()
+{
+  freopen(fileName, "rb", stdin);
+  freopen("out.txt", "wb", stdout);
+  memset(symb, 0, sizeof(symb));
+  char c;
+  int cnt = 0;
+  while(scanf("%c", &c) != EOF)
+  {
+    unsigned char current = (unsigned char)c;
+    symb[current]++;
+    cnt++;
+  }
+  node *mainNode = getTree();
   dfs(mainNode, 0, 0);
   //printf("phase 3 done!\n");
   fseek(stdin, 0, SEEK_SET);
-  printf("%d", cnt);
+  //printf("%d", cnt);
+  fwrite(&cnt, sizeof(int), 1, stdout);
   for(int i = 0; i < 256; i++)
   {
-    printf("%d", symb[i]);
+    //printf("%d", &symb[i]);
+    fwrite(&symb[i], sizeof(int), 1, stdout);
   }
   int bitsLeft = 8;
   unsigned char byteToWrite = 0;
@@ -135,16 +156,16 @@ void encode()
     unsigned char current = c;
     for(int j = 0; j < codes[current].first; j++)
     {
-      if(getBit(codes[current].second, 32 - j) == 1)
+      if(isOn(codes[current].second, 31 - j) == 1)
       {
         setBit(byteToWrite, bitsLeft - 1);
-        bitsLeft--;
-        if(bitsLeft == 0)
-        {
-          printf("%c", byteToWrite);
-          byteToWrite = 0;
-          bitsLeft = 8;
-        }
+      }
+      bitsLeft--;
+      if(bitsLeft == 0)
+      {
+        printf("%c", byteToWrite);
+        byteToWrite = 0;
+        bitsLeft = 8;
       }
     }
     //printf("%c", c);
@@ -153,10 +174,55 @@ void encode()
   {
     printf("%c", byteToWrite);
   }
+  clearCodes(mainNode);
 }
 
 void decode()
 {
+  freopen(fileName, "rb", stdin);
+  freopen("out2.txt", "wb", stdout);
+  memset(symb, 0, sizeof(symb));
+  char c;
+  int cnt = 0;
+  //scanf("%d", &cnt);
+  fread(&cnt, sizeof(int), 1, stdin);
+  for(int i = 0; i < 256; i++)
+  {
+    int val;
+    //scanf("%d", &val);
+    fread(&val, sizeof(int), 1, stdin);
+    symb[i] = val;
+  }
+  int bitsLeft = 0;
+  node *mainNode = getTree();
+  node *currentNode = mainNode;
+  while(cnt != 0)
+  {
+    if(currentNode->l == NULL && currentNode->r == NULL)
+    {
+      printf("%c", currentNode->c);
+      currentNode = mainNode;
+      cnt--;
+    }
+    else
+    {
+      if(bitsLeft == 0)
+      {
+        bitsLeft = 8;
+        scanf("%c", &c);
+      }
+      //why not using function isOn?
+      if((c & ((unsigned char)1 << (bitsLeft - 1))) != 0)
+      {
+        currentNode = currentNode->r;
+      }
+      else
+      {
+        currentNode = currentNode->l;
+      }
+      bitsLeft--;
+    }
+  }
 }
 
 int main()
