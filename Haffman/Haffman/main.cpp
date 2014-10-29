@@ -7,7 +7,7 @@
 using namespace std;
 
 char fileName[109];
-char symb[256];
+int symb[256];
 
 struct node
 {
